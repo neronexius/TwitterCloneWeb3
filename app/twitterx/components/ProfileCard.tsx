@@ -5,9 +5,12 @@ import * as web3 from "@solana/web3.js";
 import { useState, useEffect, FC} from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/router";
+import ProfileModal from "./modal/ProfileModal";
 
 
-const ProfileCard:FC = () => {
+const ProfileCard:FC<{
+  setShowProfileModal: (bool: boolean) => void
+}> = (props) => {
   const workspace:Workspace = useWorkspace();
   const router = useRouter();
 
@@ -60,25 +63,28 @@ const ProfileCard:FC = () => {
   }
 
     return (
-        <div className=" bg-blue-400 my-4 flex justify-between h-20 w-full">
-            <div className="flex items-center px-2">
+        <button className="my-4 justify-between h-[60px] w-full inline-flex items-center hover:bg-slate-900 rounded-full xl:px-6"
+        onClick={() => props.setShowProfileModal(true)}
+        >
+            <div className="flex items-center gap-2 xl:justify-start justify-center  h-full w-full">
               <Image
-                src={"/next.svg"}
-                height={50}
-                width={50}
+              className="block"
+                src={"/profile.svg"}
+                height={25}
+                width={25}
                 alt={"Profile Picture"}
               />
-              <span>{user_profile_data ? user_profile_data.username ? user_profile_data.username : user_profile_data.key.toString() : ""}</span>
+              <h1 className="xl:block hidden text-lg">{user_profile_data ? user_profile_data.username ? user_profile_data.username : user_profile_data.key.toString() : ""}</h1>
             </div>
-            <svg className=""></svg>
+            <svg className="hidden"></svg>
             <Image
+            className="xl:block hidden"
                 src={"/dots.svg"}
                 height={20}
                 width={20}
                 alt={"Profile Picture"}
             />
-
-          </div>
+          </button>
     )
 }
 

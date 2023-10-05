@@ -7,12 +7,39 @@ import LeftBody from '../components/body/LeftBody'
 import ProfileCard from '../components/ProfileCard'
 import CenterBody from '../components/body/CenterBody'
 import RightBody from '../components/body/RightBody'
-import InitialiseProfileModal from '../components/modal/InitialiseProfileModal'
-import { useState } from "react";
+import InitialiseProfileModal from '../components/modal/ProfileModal'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { useWallet } from '@solana/wallet-adapter-react'
+import ProfileModal from '../components/modal/ProfileModal'
+
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+
+  const router = useRouter();
+  const wallet = useWallet();
+
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+//Disconnect wallet when back button was pressed in the Dashboard
+useEffect(() => {
+    router.beforePopState(({ as }) => {
+        if (as !== router.asPath) {
+            disconnectWallet();
+        }
+        return true;
+    });
+
+    return () => {
+        router.beforePopState(() => true);
+    };
+}, [router]);
+
+  const disconnectWallet = async() => {
+    await wallet.disconnect();
+  }
 
   return (
     <>
@@ -22,29 +49,19 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className=" h-screen pt-2 flex md:justify-center w-screen overflow-x-hidden">
-        <div className="sm:flex xl:w-[1280px] lg:w-[1080px] md:w-[840px]">
+      <main className='overflow-hidden ' >
+      <div className=" pt-2 flex md:justify-center w-screen ">
+        <div className="sm:flex xl:w-[1280px] lg:w-[1080px] md:w-[840px] w-screen relative">
 
           <LeftBody>
             <Navbar/>
-            <ProfileCard/>
+            <ProfileCard
+            setShowProfileModal={setShowProfileModal}
+            />
           </LeftBody>
 
           <CenterBody>
-            <h1 className='p-10 bg-red-200'> Middle Content dfgdfgdfgfdgdfgdfgdfgdfgdfgdfgsdfsdfsdfsdfsdfsdfsdfsdfsdfsdsdfsdfsd  sdfsdfsdfsdfsdfsdfsdfsdfsd</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
-            <h1 className='p-10'> Middle Content</h1>
+            
             <div>
               
             </div>
@@ -59,8 +76,13 @@ export default function Home() {
             </div>
           </RightBody>
 
-          
+          {showProfileModal && <ProfileModal
+          wallet={wallet}
+          setShowProfileModal={setShowProfileModal}
+
+          />}
         </div>
+      </div>
       </main>
     </>
   )

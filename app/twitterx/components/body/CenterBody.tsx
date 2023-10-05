@@ -4,8 +4,10 @@ import { ReactNode, FC } from "react"
 const CenterBody:FC<{children:ReactNode}> = ({children}:any) => {
     
     return (
-        <div id="2ndColumn" className='w-[720px]  overflow-x-hidden sm:pr-0 pr-[60px] sm:border-x border-x-slate-600'>
+        <div id="2ndColumn" className='sm:w-[720px] w-screen overflow-x-hidden sm:pr-0 sm:border-x border-x-slate-600'>
+            <div className="px-5">
                 {children}
+            </div>
         </div>
     )
 }

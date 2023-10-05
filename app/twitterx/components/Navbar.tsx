@@ -8,9 +8,9 @@ const Navbar = () => {
 
     }
     return (
-            <div className ="flex flex-col gap-3 self-start xl:items-start items-center min-w-[60px] ">
+            <div className ="flex flex-col gap-2 self-start xl:items-start items-center min-w-[60px] tall:pr-0  ">
               <button 
-              className="items-center hover:bg-slate-900 rounded-full h-12">
+              className="items-center hover:bg-slate-900 rounded-full h-12 xl:px-6 px-2">
                 <Image
                     color="white"
                     className=""

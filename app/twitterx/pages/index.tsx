@@ -29,11 +29,13 @@ export default function Home() {
 
   const [loading, setLoading] = useState<boolean>(false);
 
+
   useEffect(()=>{
     if (wallet) {
       fetchProfile(wallet);
     }
   },[wallet])
+
 
   const fetchProfile = async(profile_wallet:web3.PublicKey) => {
     setLoading(true);
@@ -92,7 +94,7 @@ export default function Home() {
   }
 
 
-  const renderLoadingSolanaButton = () => {
+  const renderLoading = () => {
     return (
       <div className="flex px-[24px] py-3 rounded-md w-[180px] justify-center">
         <Image
@@ -118,7 +120,7 @@ export default function Home() {
 
         <div className="h-full flex  flex-col justify-center items-center w-full">
           <h1 className="p-9 text-3xl" >Welcome to TwitterXClone</h1>
-          {loading ? renderLoadingSolanaButton() :
+          {loading ? renderLoading() :
           wallet ?
           <div className="flex"><SolanaWallet/>{renderRegisterButton(wallet)}</div> :
           <div className="flex"><SolanaWallet/></div> 
