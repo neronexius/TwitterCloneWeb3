@@ -5,7 +5,7 @@ const NavButton:FC<NavButtonProps> = (props) => {
 
     return(
         <button 
-        className="flex h-[60px] items-center hover:bg-slate-900 rounded-full py-1 xl:px-6 px-2" 
+        className="flex h-[60px] items-center w-full hover:bg-slate-900 rounded-full py-1 xl:px-6 xl:justify-start justify-center" 
         onClick={props.onClick}>
             <Image
                 color="white"
