@@ -12,16 +12,48 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useWallet } from '@solana/wallet-adapter-react'
 import ProfileModal from '../components/modal/ProfileModal'
+import CreateUsernameModal from '@/components/modal/CreateUsernameModal'
+import * as web3 from "@solana/web3.js";
+import { Workspace, useWorkspace } from '@/components/providers/WorkspaceContextProvider'
+import CreatePostModal from '@/components/modal/CreatePostModal'
 
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
 
-  const router = useRouter();
+  const workspace:Workspace = useWorkspace();
+  if (!workspace || !workspace.program || !workspace.connection || !workspace.provider) {
+
+    return (
+      <>
+      </>
+    )
+  }
+  const program = workspace.program; 
+  const provider = workspace.provider;
+  const connection = workspace.connection;
   const wallet = useWallet();
 
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const router = useRouter();
+
+  const [user_profile_data, setUserProfileData] = useState<any>();
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [showCreateUsernameModal, setShowCreateUsernameModal] = useState<boolean>(false);
+  const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false);
+
+
+  
+
+
+  useEffect(()=>{
+    if (wallet && wallet.publicKey) {
+      fetchProfile(wallet.publicKey);
+    }
+    else{
+      router.push("/")
+    }
+  },[wallet])
 
 //Disconnect wallet when back button was pressed in the Dashboard
 useEffect(() => {
@@ -41,6 +73,34 @@ useEffect(() => {
     await wallet.disconnect();
   }
 
+  const fetchProfile = async(profile_wallet:web3.PublicKey) => {
+    let user_profile_pda = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()], program.programId)[0]
+    try{
+      const account_valid = await connection.getAccountInfo(user_profile_pda)
+      console.log(account_valid)
+
+      if(account_valid != null){
+        const account_info = await program.account.userProfileState.fetch(user_profile_pda);
+        let account_info_w_key = {
+          ...account_info,
+          key: profile_wallet,
+          profile_pda: user_profile_pda
+        }
+        setUserProfileData(account_info_w_key);
+        console.log("UserProfileData: ",account_info_w_key )
+      }
+      else{
+        setUserProfileData({
+          profile_pda: user_profile_pda
+        });
+        console.log("Account has not been created", account_valid);
+      }
+    }catch(error){
+      console.log("Error while fetching profile: ", error);
+    }
+
+  }
+
   return (
     <>
       <Head>
@@ -57,6 +117,7 @@ useEffect(() => {
             <Navbar/>
             <ProfileCard
             setShowProfileModal={setShowProfileModal}
+            user_profile_data={user_profile_data}
             />
           </LeftBody>
 
@@ -79,10 +140,22 @@ useEffect(() => {
           {showProfileModal && <ProfileModal
           wallet={wallet}
           setShowProfileModal={setShowProfileModal}
-
+          setShowCreateUsernameModal={setShowCreateUsernameModal}
+          user_profile_data={user_profile_data}
           />}
+
         </div>
       </div>
+
+      {showCreateUsernameModal && 
+      <CreateUsernameModal
+        user_profile_data={user_profile_data}
+        setShowCreateUsernameModal={setShowCreateUsernameModal}
+        fetchProfile={fetchProfile}
+      />}
+
+      {/* <CreatePostModal/> */}
+
       </main>
     </>
   )

@@ -8,6 +8,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/router";
 import * as web3 from "@solana/web3.js"
 import * as util from "../utils"
+
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
@@ -28,6 +29,21 @@ export default function Home() {
   const wallet = useWallet().publicKey;
 
   const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    router.beforePopState(({ as }) => {
+        if (as !== router.asPath) {
+           history.back()
+        }
+        return true;
+    });
+
+    return () => {
+        router.beforePopState(() => true);
+    };
+}, [router]);
+
+
 
 
   useEffect(()=>{
