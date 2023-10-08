@@ -1,6 +1,5 @@
 import Image from 'next/image'
-import NavButton from './NavButton';
-import ProfileCard from "./ProfileCard"
+import NavButton from './buttons/NavButton';
 
 
 const Navbar = () => {
@@ -10,7 +9,7 @@ const Navbar = () => {
     return (
             <div className ="flex flex-col gap-2 self-start xl:items-start items-center min-w-[60px] tall:pr-0  ">
               <button 
-              className="items-center hover:bg-slate-900 rounded-full h-12 xl:px-6 px-2">
+              className="items-center hover:bg-slate-900 rounded-full h-12 xl:px-6 px-2 ">
                 <Image
                     color="white"
                     className=""
@@ -63,7 +62,15 @@ const Navbar = () => {
               button_text="Profile"
               onClick={redirect_home}
               />
-              </div>
+
+              <NavButton
+              src={"/post.svg"}
+              button_text="Post"
+              onClick={redirect_home}
+              />
+
+            </div>
+
 
     )
 }

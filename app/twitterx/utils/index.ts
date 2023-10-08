@@ -1,5 +1,5 @@
-const awaitTimeout = (delay:number) => {
-    return new Promise((_, reject) => setTimeout(() => reject("Timeout"), delay));
+function onlyLettersAndNumbers(str:string) {
+    return /^[A-Za-z0-9]*$/.test(str);
 }
 
-export {awaitTimeout}
+export {onlyLettersAndNumbers};
