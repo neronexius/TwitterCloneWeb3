@@ -15,14 +15,18 @@ module.exports = {
       backgroundColor:{
         'solana': "#512DA8"
       },
+      colors:{
+        'solana': "#512DA8"
+      },
       screens:{
 
-        'tall': { 'raw': '(min-height: 472px)' },
+        'tall': { 'raw': '(min-height: 1280px)' },
           // => @media (min-height: 472px) { ... }
+        'shorter': {'raw': '(max-height: 350px)' }
       },
       minWidth: {
         '720': '50%',
-      }
+      },
     },
   },
   plugins: [],

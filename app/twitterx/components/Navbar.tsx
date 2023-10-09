@@ -2,9 +2,13 @@ import Image from 'next/image'
 import NavButton from './buttons/NavButton';
 
 
-const Navbar = () => {
+const Navbar = (props:any) => {
     const redirect_home = () => {
 
+    }
+
+    const open_post_modal = () => {
+      props.post(true)
     }
     return (
             <div className ="flex flex-col gap-2 self-start xl:items-start items-center min-w-[60px] tall:pr-0  ">
@@ -66,7 +70,7 @@ const Navbar = () => {
               <NavButton
               src={"/post.svg"}
               button_text="Post"
-              onClick={redirect_home}
+              onClick={open_post_modal}
               />
 
             </div>
