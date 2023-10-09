@@ -31,7 +31,7 @@ const CreateUsernameModal:FC<CreateUsernameModalInterface> = (props) => {
         profile_pic: ""
     })
 
-    async function on_submit(event: FormEvent<HTMLFormElement>) {
+    async function onSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setIsLoading(true)
         if(formData.username == "" && formData.profile_pic == ""){
@@ -91,7 +91,9 @@ const CreateUsernameModal:FC<CreateUsernameModalInterface> = (props) => {
       }
 
     return (
-        <LayoutModal>
+        <LayoutModal
+            closeModal={props.setShowCreateUsernameModal}
+        >
             <div className="flex w-full justify-between">
                 <CrossButton
                         click_function={() => {props.setShowCreateUsernameModal(false)}}
@@ -99,7 +101,7 @@ const CreateUsernameModal:FC<CreateUsernameModalInterface> = (props) => {
                 <h1 className="flex-grow text-center">Add Username</h1>
                 
             </div>
-            <form onSubmit={on_submit} className=" flex flex-col w-full h-full justify-between items-center">
+            <form onSubmit={onSubmit} className=" flex flex-col w-full h-full justify-between items-center min-h-[200px]">
                 <div className="relative flex-grow flex flex-col items-center w-full justify-center">
                     <div className="flex">
                         <button className="" onClick={(e)=>{e.preventDefault()}}>Username :</button>

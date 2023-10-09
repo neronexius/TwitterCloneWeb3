@@ -114,7 +114,9 @@ useEffect(() => {
         <div className="sm:flex xl:w-[1280px] lg:w-[1080px] md:w-[840px] w-screen relative">
 
           <LeftBody>
-            <Navbar/>
+            <Navbar
+              post={setShowCreatePostModal}
+            />
             <ProfileCard
             setShowProfileModal={setShowProfileModal}
             user_profile_data={user_profile_data}
@@ -154,7 +156,10 @@ useEffect(() => {
         fetchProfile={fetchProfile}
       />}
 
-      {/* <CreatePostModal/> */}
+      {showCreatePostModal && <CreatePostModal
+      setShowCreatePostModal={setShowCreatePostModal}
+      user_profile_data={user_profile_data}
+      />}
 
       </main>
     </>
