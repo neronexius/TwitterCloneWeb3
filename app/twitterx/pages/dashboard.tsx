@@ -42,7 +42,9 @@ export default function Home() {
   const [showCreateUsernameModal, setShowCreateUsernameModal] = useState<boolean>(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false);
 
-
+  useEffect(() => {
+    
+  })
   
 
 

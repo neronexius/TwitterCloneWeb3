@@ -7,6 +7,7 @@ import { onlyLettersAndNumbers } from "@/utils";
 import * as web3 from "@solana/web3.js";
 import LayoutModal from "./LayoutModal";
 import PostButton from "../buttons/PostButton";
+import { convert_to_base64 } from "@/utils";
 
 
 const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
@@ -23,13 +24,14 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
     const connection = workspace.connection;
     const wallet = useWallet();
 
-
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [formData, setFormData] = useState<CreatePostSubmission>({
         content: "",
-        media: ""
+        media: [],
+        gif: "",
     })
+
 
     function handleInputChange(e: ChangeEvent<HTMLTextAreaElement>){
 
@@ -64,6 +66,27 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
             </textarea>
       )
 
+      const handleImage = async (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]){
+            let base64_image = await convert_to_base64(e.target.files[0])
+            if(base64_image != null){
+                let form_media = formData.media;
+                form_media.push(base64_image)
+                setFormData((prev) => ({...prev, media: form_media}))
+                console.log("Added image")
+            }
+        }
+      }
+
+      const handleGif = async (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]){
+            let base64_image = await convert_to_base64(e.target.files[0])
+            if(base64_image != null){
+                setFormData((prev) => ({...prev, gif: base64_image || ""}))
+            }
+        }
+      }
+
 
     return (
         <LayoutModal
@@ -91,8 +114,29 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
                         </div>
                         <div className="w-full h-full">{renderRespondingTextarea()}</div>
                     </div>
-                    <div className="grid grid-cols-2">
-                        {/* This is where you map the images that the user selected */}
+                    <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+                        {formData.media.length > 0 && formData.media.map((media) => (
+                            <Image
+                            style={{aspectRatio: '3/2'}}
+                            className="w-full rounded-md"
+                            src={media}
+                            alt="Uploaded image"
+                            height={0}
+                            width={0}
+                            />
+                        ))}
+                        {
+                            formData.gif != "" && (
+                                <Image
+                                    style={{aspectRatio: '3/2'}}
+                                    className="w-full rounded-md"
+                                    src={formData.gif}
+                                    alt="Uploaded image"
+                                    height={0}
+                                    width={0}
+                            />
+                            )
+                        }
                     </div>
                 </div>
             </div>
@@ -103,21 +147,28 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
                         <PostButton
                             src={"/image.svg"}
                             button_text="Media"
-                            onClick={() => {}}
+                            onEvent={handleImage}
+                            disable={formData.media.length > 3 || formData.gif != ""}
+                            accept="image/jpeg, image/png"
                         />
                     </li>
                     <li>
                         <PostButton
                             src={"/gif.svg"}
                             button_text="Gif"
-                            onClick={() => {}}
+                            onEvent={handleGif}
+                            disable={formData.media.length > 0 || formData.gif != ""}
+                            accept="image/gif"
+
                         />
                     </li>
                     
                 </ul>
                 {isLoading ? 
                 renderLoading() : 
-                <button className="bg-solana hover:bg-purple-500  px-4  rounded-full " type={"submit"}> Submit </button>
+                <button className="bg-solana hover:bg-purple-500  px-4 py-1  rounded-full " onClick={() => {
+                    console.log(formData)
+                }}> Submit </button>
                 }
             </div>
             </div>
@@ -134,7 +185,7 @@ interface CreatePostModalInterface {
 
 interface CreatePostSubmission{
     content: string,
-    media: string
-
+    media: Array<string>
+    gif: string
 }
 

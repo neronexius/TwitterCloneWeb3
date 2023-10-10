@@ -44,7 +44,9 @@ export default function Home() {
 }, [router]);
 
 
-
+useEffect(()=>{
+  console.log("LOAD")
+},[loading])
 
   useEffect(()=>{
     if (wallet) {
@@ -65,7 +67,9 @@ export default function Home() {
       console.log("Error while fetching profile: ", error)
     }
     finally{
-      setLoading(false)
+      setTimeout(()=> {
+        setLoading(false)
+      },1000)
     }
 
   }
