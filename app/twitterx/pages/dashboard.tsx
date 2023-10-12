@@ -16,6 +16,7 @@ import CreateUsernameModal from '@/components/modal/CreateUsernameModal'
 import * as web3 from "@solana/web3.js";
 import { Workspace, useWorkspace } from '@/components/providers/WorkspaceContextProvider'
 import CreatePostModal from '@/components/modal/CreatePostModal'
+import { UserProfile } from '@/interface'
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -37,7 +38,7 @@ export default function Home() {
 
   const router = useRouter();
 
-  const [user_profile_data, setUserProfileData] = useState<any>();
+  const [user_profile_data, setUserProfileData] = useState<UserProfile>();
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
   const [showCreateUsernameModal, setShowCreateUsernameModal] = useState<boolean>(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false);

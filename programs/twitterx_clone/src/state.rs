@@ -1,10 +1,10 @@
-use crate::*; 
+use crate::{*, __private::__idl::IdlSetBuffer}; 
 
 #[account]
 pub struct UserProfileState {
     pub number_of_post: u32, //4
     pub username: Option<String>, //1 + 4 + String.len()
-    pub profile_image: String // 4 + String.len()
+    pub profile_image: Option<String> //1 + 4 + String.len()
 }
 
 ///
@@ -17,8 +17,8 @@ pub struct PostDataState {
     pub id: u32, //4
     pub owner: Pubkey, //32
     pub number_of_comment: u32, //4
-    pub content: String, //content.len() + 4
-    pub image_url: String, //image.len() + 4
+    pub content: Option<String>, //content.len() + 4
+    pub image_url: Option<Vec<String>>, //4 + image_url.iter().map()
     pub posted_time: i64, //8 
 }
 

@@ -94,6 +94,7 @@ useEffect(()=>{
         }
       } 
       console.log(typeof error);
+      console.log(error)
     }
     finally{
       setLoading(false)

@@ -8,6 +8,8 @@ import * as web3 from "@solana/web3.js";
 import LayoutModal from "./LayoutModal";
 import PostButton from "../buttons/PostButton";
 import { convert_to_base64 } from "@/utils";
+import { bundlrStorage, walletAdapterIdentity, Metaplex, toMetaplexFile, Signer } from "@metaplex-foundation/js";
+import { UserProfile } from "@/interface";
 
 
 const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
@@ -87,6 +89,55 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
         }
       }
 
+      const handleSubmitPost = async () => {
+        try{
+            console.log("HAHA: ", props.user_profile_data)
+            setIsLoading(true)
+            //Need separate the uploadedMedia into gif and images array
+ 
+            let uploadedMedia: Array<string> = [];
+
+            const metaplex = Metaplex.make(new web3.Connection(web3.clusterApiUrl('devnet')), {cluster:"devnet"})
+                .use(walletAdapterIdentity(wallet))
+                .use(bundlrStorage({
+                    address: "https://devnet.bundlr.network",
+                    providerUrl: web3.clusterApiUrl('devnet'),
+                    timeout: 60000
+                }))
+            if (formData.media.length > 0 && formData.gif == ""){
+                let formImageMap = formData.media.map((image) => {
+                    return toMetaplexFile(Buffer.from(image.split(',')[1], 'base64'), "image.jpg")
+                })
+                uploadedMedia = await metaplex.storage().uploadAll(formImageMap);
+            }
+
+            else if (formData.gif != "" && formData.media.length == 0) {
+                let formGif = toMetaplexFile(Buffer.from(formData.gif.split(',')[1], 'base64'), "image.gif")
+                uploadedMedia = [await metaplex.storage().upload(formGif)];
+            }
+            let content = formData.content;
+
+            const transaction = await program.methods
+            .createPost(content, uploadedMedia)
+            .accounts({
+                userProfile: props.user_profile_data?.profile_pda,
+                user: wallet.publicKey || undefined
+            })
+            .transaction()
+
+            const tx = await provider.sendAndConfirm(transaction);
+
+            console.log("transaction: ", tx)
+
+        }
+        catch(error){
+            console.log(error)
+        }
+        finally{
+            setIsLoading(false);
+        }
+      }
+
 
     return (
         <LayoutModal
@@ -106,7 +157,7 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
                                 <Image
                                 className=" bg-slate-800 rounded-full"
                                 // src={props.user_profile_data ? props.user_profile_data.profile_pic ?  props.user_profile_data.profile_pic : "/profile.svg" : "/profile.svg"}
-                                src="https://images.unsplash.com/photo-1596436950209-65ef85e9679c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80"
+                                src="https://i.imgur.com/wuKUkXv.gif"
                                 alt="pfp"
                     
                                 fill
@@ -166,9 +217,7 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
                 </ul>
                 {isLoading ? 
                 renderLoading() : 
-                <button className="bg-solana hover:bg-purple-500  px-4 py-1  rounded-full " onClick={() => {
-                    console.log(formData)
-                }}> Submit </button>
+                <button className="bg-solana hover:bg-purple-500  px-4 py-1  rounded-full " onClick={handleSubmitPost}> Submit </button>
                 }
             </div>
             </div>
@@ -179,7 +228,7 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
 export default CreatePostModal;
 
 interface CreatePostModalInterface {
-    user_profile_data: any
+    user_profile_data: UserProfile | undefined
     setShowCreatePostModal: (state: boolean) => void
 }
 

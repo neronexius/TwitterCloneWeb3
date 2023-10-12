@@ -29,6 +29,10 @@ pub mod twitterx_clone {
     pub fn initialise_user_username(mut ctx: Context<InitialiseUsername>, input_username: String ) -> Result<()>  {
         InitialiseUsername::init_username(&mut ctx, input_username)
     }
+
+    pub fn create_post(mut ctx: Context<CreatePost>, content: Option<String>, image_url: Option<Vec<String>>) -> Result<()>{
+        CreatePost::create_post(&mut ctx, content, image_url)
+    }
 }
 
 #[derive(Accounts)]

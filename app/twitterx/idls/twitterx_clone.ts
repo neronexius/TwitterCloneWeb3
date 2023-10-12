@@ -53,6 +53,47 @@ export type TwitterxClone = {
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "createPost",
+      "accounts": [
+        {
+          "name": "userProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "post",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "content",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "imageUrl",
+          "type": {
+            "option": {
+              "vec": "string"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -70,6 +111,10 @@ export type TwitterxClone = {
             "type": {
               "option": "string"
             }
+          },
+          {
+            "name": "profileImage",
+            "type": "string"
           }
         ]
       }
@@ -103,11 +148,17 @@ export type TwitterxClone = {
           },
           {
             "name": "content",
-            "type": "string"
+            "type": {
+              "option": "string"
+            }
           },
           {
             "name": "imageUrl",
-            "type": "string"
+            "type": {
+              "option": {
+                "vec": "string"
+              }
+            }
           },
           {
             "name": "postedTime",
@@ -211,6 +262,47 @@ export const IDL: TwitterxClone = {
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "createPost",
+      "accounts": [
+        {
+          "name": "userProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "post",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "content",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "imageUrl",
+          "type": {
+            "option": {
+              "vec": "string"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -228,6 +320,10 @@ export const IDL: TwitterxClone = {
             "type": {
               "option": "string"
             }
+          },
+          {
+            "name": "profileImage",
+            "type": "string"
           }
         ]
       }
@@ -261,11 +357,17 @@ export const IDL: TwitterxClone = {
           },
           {
             "name": "content",
-            "type": "string"
+            "type": {
+              "option": "string"
+            }
           },
           {
             "name": "imageUrl",
-            "type": "string"
+            "type": {
+              "option": {
+                "vec": "string"
+              }
+            }
           },
           {
             "name": "postedTime",

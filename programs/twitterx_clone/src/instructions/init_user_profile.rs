@@ -4,10 +4,9 @@ use crate::*;
 pub struct InitialiseUserProfile<'info> {
     #[account(
         init,
-
         seeds = [USER_PROFILE_SEED.as_bytes(), initialiser.key().as_ref()],
         bump,
-        space = 8 + 4 + 1,
+        space = 8 + 4 + 1 + 1,
         payer = initialiser
     )]
     pub user_profile: Account<'info, UserProfileState>,
