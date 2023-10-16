@@ -114,7 +114,9 @@
           },
           {
             "name": "profileImage",
-            "type": "string"
+            "type": {
+              "option": "string"
+            }
           }
         ]
       }
@@ -143,6 +145,10 @@
             "type": "publicKey"
           },
           {
+            "name": "postedTime",
+            "type": "i64"
+          },
+          {
             "name": "numberOfComment",
             "type": "u32"
           },
@@ -159,10 +165,6 @@
                 "vec": "string"
               }
             }
-          },
-          {
-            "name": "postedTime",
-            "type": "i64"
           }
         ]
       }

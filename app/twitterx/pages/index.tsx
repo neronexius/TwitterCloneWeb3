@@ -43,10 +43,7 @@ export default function Home() {
     };
 }, [router]);
 
-
-useEffect(()=>{
-  console.log("LOAD")
-},[loading])
+  console.log("i render again")
 
   useEffect(()=>{
     if (wallet) {
@@ -85,7 +82,7 @@ useEffect(()=>{
 
       const tx = await provider.sendAndConfirm(transaction);
       console.log(tx);
-      await fetchProfile(profile_wallet);
+      router.push("/dashboard")
     }
     catch(error:any){
       if (typeof error == "object"){
@@ -97,7 +94,9 @@ useEffect(()=>{
       console.log(error)
     }
     finally{
-      setLoading(false)
+      setTimeout(()=> {
+        setLoading(false)
+      },1000)
     }
 }
 

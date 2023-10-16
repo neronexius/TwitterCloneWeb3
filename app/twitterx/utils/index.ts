@@ -1,6 +1,4 @@
-import { base64 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
-import { File } from "buffer";
-import { ChangeEvent } from "react";
+import * as anchor from "@project-serum/anchor"
 
 function onlyLettersAndNumbers(str:string) {
     return /^[A-Za-z0-9]*$/.test(str);
@@ -27,4 +25,8 @@ const convert_to_base64 = (blob: Blob): Promise<string | null> => {
     });
 };
 
-export {onlyLettersAndNumbers, convert_to_base64};
+const bn_to_date = (number: anchor.BN): Date => {
+    return new Date(number.toNumber() * 1000)
+}
+
+export {onlyLettersAndNumbers, convert_to_base64, bn_to_date};

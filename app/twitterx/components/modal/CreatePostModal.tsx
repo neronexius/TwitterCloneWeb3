@@ -111,17 +111,22 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
                 uploadedMedia = await metaplex.storage().uploadAll(formImageMap);
             }
 
-            else if (formData.gif != "" && formData.media.length == 0) {
+            if (formData.gif != "" && formData.media.length == 0) {
                 let formGif = toMetaplexFile(Buffer.from(formData.gif.split(',')[1], 'base64'), "image.gif")
                 uploadedMedia = [await metaplex.storage().upload(formGif)];
             }
             let content = formData.content;
-
+            if (!props.user_profile_data || props.user_profile_data.numberOfPost == undefined){
+                return
+            } 
+            let [post_pda] = web3.PublicKey.findProgramAddressSync([Buffer.from("post"), props.user_profile_data.profile_pda.toBuffer(), Buffer.from((props.user_profile_data.numberOfPost + 1).toString())], program.programId)
+            console.log("Content: ", content)
             const transaction = await program.methods
             .createPost(content, uploadedMedia)
             .accounts({
-                userProfile: props.user_profile_data?.profile_pda,
-                user: wallet.publicKey || undefined
+                userProfile: props.user_profile_data.profile_pda,
+                user: wallet.publicKey || undefined,
+                post: post_pda
             })
             .transaction()
 
@@ -129,12 +134,15 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
 
             console.log("transaction: ", tx)
 
+            props.fetchProfile(props.user_profile_data.key);
+
         }
         catch(error){
             console.log(error)
         }
         finally{
             setIsLoading(false);
+            props.setShowCreatePostModal(false)
         }
       }
 
@@ -230,6 +238,7 @@ export default CreatePostModal;
 interface CreatePostModalInterface {
     user_profile_data: UserProfile | undefined
     setShowCreatePostModal: (state: boolean) => void
+    fetchProfile: any
 }
 
 interface CreatePostSubmission{

@@ -1,4 +1,4 @@
-use crate::{*, __private::__idl::IdlSetBuffer}; 
+use crate::*;
 
 #[account]
 pub struct UserProfileState {
@@ -16,10 +16,10 @@ pub struct UsernameState {
 pub struct PostDataState {
     pub id: u32, //4
     pub owner: Pubkey, //32
+    pub posted_time: i64, //8 
     pub number_of_comment: u32, //4
     pub content: Option<String>, //content.len() + 4
     pub image_url: Option<Vec<String>>, //4 + image_url.iter().map()
-    pub posted_time: i64, //8 
 }
 
 #[account]

@@ -15,10 +15,10 @@ pub struct CreatePost<'info> {
 
     #[account(
         init,
-        seeds = [POST_SEED.as_bytes(), user_profile.key().as_ref(), (user_profile.number_of_post + 1).to_le_bytes().as_ref()],
+        seeds = [POST_SEED.as_bytes(), user_profile.key().as_ref(), (user_profile.number_of_post + 1).to_string().as_bytes()],
         bump,
         payer = user,
-        space = 4 + 32 + 4 + (4 + 1 + content.unwrap_or_else(|| {String::from("")}).len()) + (4 + 1 + image_url.unwrap_or_else(|| {Vec::new()}).iter().map(|x| x.len()).sum::<usize>()) + 8
+        space = 8 + 4 + 32 + 4 + (1 + 4 + content.unwrap_or_else(|| {String::from("")}).len()) + (1  + 4 +  image_url.unwrap_or_else(|| {Vec::new()}).iter().map(|x| x.len() + 4).sum::<usize>()) + 8  
     )]
     pub post: Account<'info, PostDataState>,
 
@@ -30,14 +30,17 @@ impl CreatePost<'_>{
         msg!("Creating Post... ");
         msg!("Content: {}", content.clone().unwrap());
         msg!("Image url: {:?}", image_url.clone().unwrap());
+
         let clock = Clock::get()?;
         ctx.accounts.post.id = ctx.accounts.user_profile.number_of_post + 1;
-        ctx.accounts.post.owner = ctx.accounts.user.key();
+        ctx.accounts.post.owner = ctx.accounts.user_profile.key();
         ctx.accounts.post.number_of_comment = 0;
         ctx.accounts.post.image_url = image_url;
         ctx.accounts.post.content = content;
         ctx.accounts.post.posted_time = clock.unix_timestamp;
 
+
+        ctx.accounts.user_profile.number_of_post += 1;
         msg!("Added Post detail.. Posting...");
 
         Ok(())

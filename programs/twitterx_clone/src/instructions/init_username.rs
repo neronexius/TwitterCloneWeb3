@@ -11,7 +11,7 @@ pub struct InitialiseUsername<'info>  {
         mut, 
         seeds = [USER_PROFILE_SEED.as_bytes(), owner.key().as_ref()],
         bump,
-        realloc = 8 + 4 + 1 + (4 + name.len()),
+        realloc = 8 + 4 + 1 + (4 + 1 + name.len()),
         realloc::payer = owner,
         realloc::zero = false
 

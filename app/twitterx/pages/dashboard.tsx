@@ -16,7 +16,10 @@ import CreateUsernameModal from '@/components/modal/CreateUsernameModal'
 import * as web3 from "@solana/web3.js";
 import { Workspace, useWorkspace } from '@/components/providers/WorkspaceContextProvider'
 import CreatePostModal from '@/components/modal/CreatePostModal'
-import { UserProfile } from '@/interface'
+import { Post, UserProfile } from '@/interface'
+import * as anchor from "@project-serum/anchor"
+import PostCard from '@/components/Postcard'
+import { BorshAccountsCoder } from '@coral-xyz/anchor'
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -39,14 +42,14 @@ export default function Home() {
   const router = useRouter();
 
   const [user_profile_data, setUserProfileData] = useState<UserProfile>();
+  const [user_posts_data, setUserPostData] = useState<Array<{
+    pda: anchor.web3.PublicKey,
+    date: Date
+  }>>(); 
+
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
   const [showCreateUsernameModal, setShowCreateUsernameModal] = useState<boolean>(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false);
-
-  useEffect(() => {
-    
-  })
-  
 
 
   useEffect(()=>{
@@ -82,7 +85,7 @@ useEffect(() => {
       const account_valid = await connection.getAccountInfo(user_profile_pda)
       console.log(account_valid)
 
-      if(account_valid != null){
+      // if(account_valid != null){
         const account_info = await program.account.userProfileState.fetch(user_profile_pda);
         let account_info_w_key = {
           ...account_info,
@@ -91,17 +94,68 @@ useEffect(() => {
         }
         setUserProfileData(account_info_w_key);
         console.log("UserProfileData: ",account_info_w_key )
-      }
-      else{
-        setUserProfileData({
-          profile_pda: user_profile_pda
-        });
-        console.log("Account has not been created", account_valid);
-      }
+      // }
+      // else{
+      //   setUserProfileData({
+      //     key: profile_wallet,
+      //     profile_pda: user_profile_pda
+      //   });
+      //   console.log("Account has not been created", account_valid);
+      // }
     }catch(error){
       console.log("Error while fetching profile: ", error);
     }
 
+  }
+
+  const fetchPost = async() => {
+    if(!user_profile_data){
+      return
+    }
+    try{
+      const discriminator = BorshAccountsCoder.accountDiscriminator("postDataState");
+
+      let posts = await connection.getProgramAccounts(program.programId, {
+        dataSlice:{
+          offset: 44,
+          length: 8
+        },
+        filters:[
+          {
+            memcmp:{
+              offset: 0,
+              bytes: anchor.utils.bytes.bs58.encode(discriminator)
+              //figure out how to get the discriminator from anchor account. 
+            },
+          },
+          {
+            memcmp:{
+              offset: 12,
+              bytes: anchor.utils.bytes.bs58.encode(user_profile_data.profile_pda.toBuffer())
+            }
+          }
+          
+        ]
+      })
+
+      console.log("posts", posts)
+
+      if(posts.length > 0) {
+        let post_deserialize = posts.map((post) => {
+          return {
+            date: new Date(post.account.data.reduce((acc, byte, index) => acc + byte * Math.pow(256, index), 0)),
+            pda: post.pubkey
+          }
+        })
+        // post_deserialize.sort()
+        post_deserialize.sort((a,b) => b.date.getTime() - a.date.getTime())
+        setUserPostData(post_deserialize)
+      }
+
+  }
+  catch(error){
+    console.log(error)
+  }
   }
 
   return (
@@ -112,9 +166,9 @@ useEffect(() => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className='overflow-hidden ' >
+      <main className='overflow-hidden' >
       <div className=" pt-2 flex md:justify-center w-screen ">
-        <div className="sm:flex xl:w-[1280px] lg:w-[1080px] md:w-[840px] w-screen relative">
+        <div className="sm:flex xl:w-[1280px] lg:w-[1080px] md:w-[840px] w-screen relative ">
 
           <LeftBody>
             <Navbar
@@ -127,10 +181,15 @@ useEffect(() => {
           </LeftBody>
 
           <CenterBody>
-            
-            <div>
-              
-            </div>
+            <button onClick={fetchPost}>Fetch Data</button>
+            {user_posts_data && user_posts_data.map((post, id) => (
+              <PostCard
+                key={id}
+                post={post}
+              />
+            ))}
+
+
           </CenterBody>
           <RightBody>
             <div className='flex justify-start'>
@@ -162,6 +221,10 @@ useEffect(() => {
       {showCreatePostModal && <CreatePostModal
       setShowCreatePostModal={setShowCreatePostModal}
       user_profile_data={user_profile_data}
+      fetchProfile={()=> {
+        user_profile_data && user_profile_data.key
+        && fetchProfile(user_profile_data.key)
+      }}
       />}
 
       </main>

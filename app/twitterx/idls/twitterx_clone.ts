@@ -114,7 +114,9 @@ export type TwitterxClone = {
           },
           {
             "name": "profileImage",
-            "type": "string"
+            "type": {
+              "option": "string"
+            }
           }
         ]
       }
@@ -143,6 +145,10 @@ export type TwitterxClone = {
             "type": "publicKey"
           },
           {
+            "name": "postedTime",
+            "type": "i64"
+          },
+          {
             "name": "numberOfComment",
             "type": "u32"
           },
@@ -159,10 +165,6 @@ export type TwitterxClone = {
                 "vec": "string"
               }
             }
-          },
-          {
-            "name": "postedTime",
-            "type": "i64"
           }
         ]
       }
@@ -323,7 +325,9 @@ export const IDL: TwitterxClone = {
           },
           {
             "name": "profileImage",
-            "type": "string"
+            "type": {
+              "option": "string"
+            }
           }
         ]
       }
@@ -352,6 +356,10 @@ export const IDL: TwitterxClone = {
             "type": "publicKey"
           },
           {
+            "name": "postedTime",
+            "type": "i64"
+          },
+          {
             "name": "numberOfComment",
             "type": "u32"
           },
@@ -368,10 +376,6 @@ export const IDL: TwitterxClone = {
                 "vec": "string"
               }
             }
-          },
-          {
-            "name": "postedTime",
-            "type": "i64"
           }
         ]
       }
