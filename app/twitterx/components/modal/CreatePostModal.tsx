@@ -7,29 +7,32 @@ import { onlyLettersAndNumbers } from "@/utils";
 import * as web3 from "@solana/web3.js";
 import LayoutModal from "./LayoutModal";
 import PostButton from "../buttons/PostButton";
+import { convert_to_base64 } from "@/utils";
+import { bundlrStorage, walletAdapterIdentity, Metaplex, toMetaplexFile, Signer } from "@metaplex-foundation/js";
+import { UserProfile } from "@/interface";
 
 
 const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
 
     const workspace:Workspace = useWorkspace();
-    if (!workspace || !workspace.program || !workspace.connection || !workspace.provider) {
-        return (
-            <>
-            </>
-        )
-    }
+    // if (!workspace || !workspace.program || !workspace.connection || !workspace.provider) {
+    //     return (
+    //         <>
+    //         </>
+    //     )
+    // }
     const program = workspace.program; 
     const provider = workspace.provider;
-    const connection = workspace.connection;
     const wallet = useWallet();
-
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [formData, setFormData] = useState<CreatePostSubmission>({
         content: "",
-        media: ""
+        media: [],
+        gif: "",
     })
+
 
     function handleInputChange(e: ChangeEvent<HTMLTextAreaElement>){
 
@@ -64,6 +67,86 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
             </textarea>
       )
 
+      const handleImage = async (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]){
+            let base64_image = await convert_to_base64(e.target.files[0])
+            if(base64_image != null){
+                let form_media = formData.media;
+                form_media.push(base64_image)
+                setFormData((prev) => ({...prev, media: form_media}))
+                console.log("Added image")
+            }
+        }
+      }
+
+      const handleGif = async (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]){
+            let base64_image = await convert_to_base64(e.target.files[0])
+            if(base64_image != null){
+                setFormData((prev) => ({...prev, gif: base64_image || ""}))
+            }
+        }
+      }
+
+      const handleSubmitPost = async () => {
+        try{
+            if(!program || !provider) {
+                return
+            }
+            setIsLoading(true)
+            //Need separate the uploadedMedia into gif and images array
+ 
+            let uploadedMedia: Array<string> = [];
+
+            const metaplex = Metaplex.make(new web3.Connection(web3.clusterApiUrl('devnet')), {cluster:"devnet"})
+                .use(walletAdapterIdentity(wallet))
+                .use(bundlrStorage({
+                    address: "https://devnet.bundlr.network",
+                    providerUrl: web3.clusterApiUrl('devnet'),
+                    timeout: 60000
+                }))
+            if (formData.media.length > 0 && formData.gif == ""){
+                let formImageMap = formData.media.map((image) => {
+                    return toMetaplexFile(Buffer.from(image.split(',')[1], 'base64'), "image.jpg")
+                })
+                uploadedMedia = await metaplex.storage().uploadAll(formImageMap);
+            }
+
+            if (formData.gif != "" && formData.media.length == 0) {
+                let formGif = toMetaplexFile(Buffer.from(formData.gif.split(',')[1], 'base64'), "image.gif")
+                uploadedMedia = [await metaplex.storage().upload(formGif)];
+            }
+            let content = formData.content;
+            if (!props.user_profile_data || props.user_profile_data.numberOfPost == undefined){
+                return
+            } 
+            let [post_pda] = web3.PublicKey.findProgramAddressSync([Buffer.from("post"), props.user_profile_data.profile_pda.toBuffer(), Buffer.from((props.user_profile_data.numberOfPost + 1).toString())], program.programId)
+            console.log("Content: ", content)
+            const transaction = await program.methods
+            .createPost(content, uploadedMedia)
+            .accounts({
+                userProfile: props.user_profile_data.profile_pda,
+                user: wallet.publicKey || undefined,
+                post: post_pda
+            })
+            .transaction()
+
+            const tx = await provider.sendAndConfirm(transaction);
+
+            console.log("transaction: ", tx)
+
+            props.fetchProfile(props.user_profile_data.key);
+
+        }
+        catch(error){
+            console.log(error)
+        }
+        finally{
+            setIsLoading(false);
+            props.setShowCreatePostModal(false)
+        }
+      }
+
 
     return (
         <LayoutModal
@@ -83,7 +166,7 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
                                 <Image
                                 className=" bg-slate-800 rounded-full"
                                 // src={props.user_profile_data ? props.user_profile_data.profile_pic ?  props.user_profile_data.profile_pic : "/profile.svg" : "/profile.svg"}
-                                src="https://images.unsplash.com/photo-1596436950209-65ef85e9679c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1888&q=80"
+                                src="https://i.imgur.com/wuKUkXv.gif"
                                 alt="pfp"
                     
                                 fill
@@ -91,8 +174,29 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
                         </div>
                         <div className="w-full h-full">{renderRespondingTextarea()}</div>
                     </div>
-                    <div className="grid grid-cols-2">
-                        {/* This is where you map the images that the user selected */}
+                    <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+                        {formData.media.length > 0 && formData.media.map((media) => (
+                            <Image
+                            style={{aspectRatio: '3/2'}}
+                            className="w-full rounded-md"
+                            src={media}
+                            alt="Uploaded image"
+                            height={0}
+                            width={0}
+                            />
+                        ))}
+                        {
+                            formData.gif != "" && (
+                                <Image
+                                    style={{aspectRatio: '3/2'}}
+                                    className="w-full rounded-md"
+                                    src={formData.gif}
+                                    alt="Uploaded image"
+                                    height={0}
+                                    width={0}
+                            />
+                            )
+                        }
                     </div>
                 </div>
             </div>
@@ -103,21 +207,26 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
                         <PostButton
                             src={"/image.svg"}
                             button_text="Media"
-                            onClick={() => {}}
+                            onEvent={handleImage}
+                            disable={formData.media.length > 3 || formData.gif != ""}
+                            accept="image/jpeg, image/png"
                         />
                     </li>
                     <li>
                         <PostButton
                             src={"/gif.svg"}
                             button_text="Gif"
-                            onClick={() => {}}
+                            onEvent={handleGif}
+                            disable={formData.media.length > 0 || formData.gif != ""}
+                            accept="image/gif"
+
                         />
                     </li>
                     
                 </ul>
                 {isLoading ? 
                 renderLoading() : 
-                <button className="bg-solana hover:bg-purple-500  px-4  rounded-full " type={"submit"}> Submit </button>
+                <button className="bg-solana hover:bg-purple-500  px-4 py-1  rounded-full " onClick={handleSubmitPost}> Submit </button>
                 }
             </div>
             </div>
@@ -128,13 +237,14 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
 export default CreatePostModal;
 
 interface CreatePostModalInterface {
-    user_profile_data: any
+    user_profile_data: UserProfile | undefined
     setShowCreatePostModal: (state: boolean) => void
+    fetchProfile: any
 }
 
 interface CreatePostSubmission{
     content: string,
-    media: string
-
+    media: Array<string>
+    gif: string
 }
 

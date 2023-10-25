@@ -53,6 +53,47 @@ export type TwitterxClone = {
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "createPost",
+      "accounts": [
+        {
+          "name": "userProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "post",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "content",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "imageUrl",
+          "type": {
+            "option": {
+              "vec": "string"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -67,6 +108,12 @@ export type TwitterxClone = {
           },
           {
             "name": "username",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "profileImage",
             "type": {
               "option": "string"
             }
@@ -98,20 +145,26 @@ export type TwitterxClone = {
             "type": "publicKey"
           },
           {
+            "name": "postedTime",
+            "type": "i64"
+          },
+          {
             "name": "numberOfComment",
             "type": "u32"
           },
           {
             "name": "content",
-            "type": "string"
+            "type": {
+              "option": "string"
+            }
           },
           {
             "name": "imageUrl",
-            "type": "string"
-          },
-          {
-            "name": "postedTime",
-            "type": "i64"
+            "type": {
+              "option": {
+                "vec": "string"
+              }
+            }
           }
         ]
       }
@@ -211,6 +264,47 @@ export const IDL: TwitterxClone = {
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "createPost",
+      "accounts": [
+        {
+          "name": "userProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "post",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "content",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "imageUrl",
+          "type": {
+            "option": {
+              "vec": "string"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -225,6 +319,12 @@ export const IDL: TwitterxClone = {
           },
           {
             "name": "username",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "profileImage",
             "type": {
               "option": "string"
             }
@@ -256,20 +356,26 @@ export const IDL: TwitterxClone = {
             "type": "publicKey"
           },
           {
+            "name": "postedTime",
+            "type": "i64"
+          },
+          {
             "name": "numberOfComment",
             "type": "u32"
           },
           {
             "name": "content",
-            "type": "string"
+            "type": {
+              "option": "string"
+            }
           },
           {
             "name": "imageUrl",
-            "type": "string"
-          },
-          {
-            "name": "postedTime",
-            "type": "i64"
+            "type": {
+              "option": {
+                "vec": "string"
+              }
+            }
           }
         ]
       }

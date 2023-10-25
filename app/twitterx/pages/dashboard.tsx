@@ -16,6 +16,11 @@ import CreateUsernameModal from '@/components/modal/CreateUsernameModal'
 import * as web3 from "@solana/web3.js";
 import { Workspace, useWorkspace } from '@/components/providers/WorkspaceContextProvider'
 import CreatePostModal from '@/components/modal/CreatePostModal'
+import { Post, UserProfile } from '@/interface'
+import * as anchor from "@project-serum/anchor"
+import PostCard from '@/components/Postcard'
+import { BorshAccountsCoder } from '@coral-xyz/anchor'
+import ScrollablePostcards from '@/components/ScrollablePostcards'
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -23,13 +28,6 @@ const inter = Inter({ subsets: ['latin'] })
 export default function Home() {
 
   const workspace:Workspace = useWorkspace();
-  if (!workspace || !workspace.program || !workspace.connection || !workspace.provider) {
-
-    return (
-      <>
-      </>
-    )
-  }
   const program = workspace.program; 
   const provider = workspace.provider;
   const connection = workspace.connection;
@@ -37,14 +35,15 @@ export default function Home() {
 
   const router = useRouter();
 
-  const [user_profile_data, setUserProfileData] = useState<any>();
+  const [user_profile_data, setUserProfileData] = useState<UserProfile>();
+  const [user_posts_data, setUserPostData] = useState<Array<{
+    pda: anchor.web3.PublicKey,
+    date: Date
+  }>>(); 
+
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
   const [showCreateUsernameModal, setShowCreateUsernameModal] = useState<boolean>(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false);
-
-
-  
-
 
   useEffect(()=>{
     if (wallet && wallet.publicKey) {
@@ -55,50 +54,99 @@ export default function Home() {
     }
   },[wallet])
 
-//Disconnect wallet when back button was pressed in the Dashboard
-useEffect(() => {
-    router.beforePopState(({ as }) => {
-        if (as !== router.asPath) {
-            disconnectWallet();
-        }
-        return true;
-    });
+  useEffect(()=> {
+    fetchPost()
+  },[user_profile_data])
 
-    return () => {
-        router.beforePopState(() => true);
-    };
-}, [router]);
+  //Disconnect wallet when back button was pressed in the Dashboard
+  useEffect(() => {
+      router.beforePopState(({ as }) => {
+          if (as !== router.asPath) {
+              disconnectWallet();
+          }
+          return true;
+      });
 
-  const disconnectWallet = async() => {
-    await wallet.disconnect();
-  }
+      return () => {
+          router.beforePopState(() => true);
+      };
+  }, [router]);
+ 
 
   const fetchProfile = async(profile_wallet:web3.PublicKey) => {
     let user_profile_pda = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()], program.programId)[0]
     try{
       const account_valid = await connection.getAccountInfo(user_profile_pda)
-      console.log(account_valid)
+  
+      if(!account_valid) router.push("/");
 
-      if(account_valid != null){
-        const account_info = await program.account.userProfileState.fetch(user_profile_pda);
-        let account_info_w_key = {
-          ...account_info,
-          key: profile_wallet,
-          profile_pda: user_profile_pda
-        }
-        setUserProfileData(account_info_w_key);
-        console.log("UserProfileData: ",account_info_w_key )
+      const account_info = await program.account.userProfileState.fetch(user_profile_pda);
+
+      let account_info_w_key = {
+        ...account_info,
+        key: profile_wallet,
+        profile_pda: user_profile_pda
       }
-      else{
-        setUserProfileData({
-          profile_pda: user_profile_pda
-        });
-        console.log("Account has not been created", account_valid);
-      }
+
+      setUserProfileData(account_info_w_key);
+      console.log("fetchProfile fetched: ", account_info_w_key);
     }catch(error){
       console.log("Error while fetching profile: ", error);
     }
 
+  }
+
+  const fetchPost = async() => {
+    try{
+      if(!user_profile_data) return
+      const discriminator = BorshAccountsCoder.accountDiscriminator("postDataState");
+
+      let posts = await connection.getProgramAccounts(program.programId, {
+        dataSlice:{
+          offset: 44,
+          length: 8
+        },
+        filters:[
+          {
+            memcmp:{
+              offset: 0,
+              bytes: anchor.utils.bytes.bs58.encode(discriminator)
+              //figure out how to get the discriminator from anchor account. 
+            },
+          },
+          {
+            memcmp:{
+              offset: 12,
+              bytes: anchor.utils.bytes.bs58.encode(user_profile_data.profile_pda.toBuffer())
+            }
+          }
+          
+        ]
+      })
+
+      console.log("fetchPost fetched: ", posts)
+
+      if(posts.length > 0) {
+        let post_deserialize = posts.map((post) => {
+          return {
+            date: new Date(post.account.data.reduce((acc, byte, index) => acc + byte * Math.pow(256, index), 0) * 1000),
+            pda: post.pubkey
+          }
+        })
+        post_deserialize.sort((a,b) => b.date.getTime() - a.date.getTime())
+        setUserPostData(post_deserialize)
+      }
+
+  }
+  catch(error){
+    console.log(error)
+  }
+  }
+
+
+
+  const disconnectWallet = async() => {
+    await wallet.disconnect();
   }
 
   return (
@@ -109,9 +157,9 @@ useEffect(() => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className='overflow-hidden ' >
+      <main className='overflow-hidden' >
       <div className=" pt-2 flex md:justify-center w-screen ">
-        <div className="sm:flex xl:w-[1280px] lg:w-[1080px] md:w-[840px] w-screen relative">
+        <div className="sm:flex xl:w-[1280px] lg:w-[1080px] md:w-[840px] w-screen relative ">
 
           <LeftBody>
             <Navbar
@@ -124,11 +172,11 @@ useEffect(() => {
           </LeftBody>
 
           <CenterBody>
-            
-            <div>
-              
-            </div>
+            <ScrollablePostcards
+            posts_data={user_posts_data}
+            />
           </CenterBody>
+
           <RightBody>
             <div className='flex justify-start'>
               <SolanaWallet/> 
@@ -159,6 +207,10 @@ useEffect(() => {
       {showCreatePostModal && <CreatePostModal
       setShowCreatePostModal={setShowCreatePostModal}
       user_profile_data={user_profile_data}
+      fetchProfile={()=> {
+        user_profile_data && user_profile_data.key
+        && fetchProfile(user_profile_data.key)
+      }}
       />}
 
       </main>
