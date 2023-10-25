@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Head from 'next/head'
 import { Inter } from 'next/font/google'
 import SolanaWallet from '../components/SolanaWallet'
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Workspace, useWorkspace } from '@/components/providers/WorkspaceContextProvider'
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/router";
@@ -14,14 +14,6 @@ const inter = Inter({ subsets: ['latin'] })
 export default function Home() {
   const workspace:Workspace = useWorkspace();
   const router = useRouter();
-
-  if (!workspace || !workspace.program || !workspace.connection || !workspace.provider) {
-
-    return (
-      <>
-      </>
-    )
-  }
 
   const program = workspace.program; 
   const provider = workspace.provider;
@@ -43,8 +35,6 @@ export default function Home() {
     };
 }, [router]);
 
-  console.log("i render again")
-
   useEffect(()=>{
     if (wallet) {
       fetchProfile(wallet);
@@ -52,24 +42,24 @@ export default function Home() {
   },[wallet])
 
 
-  const fetchProfile = async(profile_wallet:web3.PublicKey) => {
-    setLoading(true);
-    const [userProfilePda] = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()],program.programId)
-    try{
-      const account_valid = await connection.getAccountInfo(userProfilePda)
-      if(account_valid != null){
-        router.push("/dashboard")
+  const fetchProfile = useCallback(async(profile_wallet:web3.PublicKey) => {
+      setLoading(true);
+      const [userProfilePda] = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()],program.programId)
+      try{
+        const account_valid = await connection.getAccountInfo(userProfilePda)
+        if(account_valid != null){
+          router.push("/dashboard")
+        }
+      }catch(error){
+        console.log("Error while fetching profile: ", error)
       }
-    }catch(error){
-      console.log("Error while fetching profile: ", error)
-    }
-    finally{
-      setTimeout(()=> {
-        setLoading(false)
-      },1000)
-    }
-
-  }
+      finally{
+        setTimeout(()=> {
+          setLoading(false)
+        },1000)
+      }
+  },[wallet])
+  
 
   const initialiseProfile = async(profile_wallet: web3.PublicKey) => {
     setLoading(true);
@@ -127,7 +117,6 @@ export default function Home() {
       </div>
     )
   }
-
   return (
     <>
       <Head>

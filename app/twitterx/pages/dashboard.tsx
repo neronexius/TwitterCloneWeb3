@@ -20,6 +20,7 @@ import { Post, UserProfile } from '@/interface'
 import * as anchor from "@project-serum/anchor"
 import PostCard from '@/components/Postcard'
 import { BorshAccountsCoder } from '@coral-xyz/anchor'
+import ScrollablePostcards from '@/components/ScrollablePostcards'
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -27,13 +28,6 @@ const inter = Inter({ subsets: ['latin'] })
 export default function Home() {
 
   const workspace:Workspace = useWorkspace();
-  if (!workspace || !workspace.program || !workspace.connection || !workspace.provider) {
-
-    return (
-      <>
-      </>
-    )
-  }
   const program = workspace.program; 
   const provider = workspace.provider;
   const connection = workspace.connection;
@@ -51,7 +45,6 @@ export default function Home() {
   const [showCreateUsernameModal, setShowCreateUsernameModal] = useState<boolean>(false);
   const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false);
 
-
   useEffect(()=>{
     if (wallet && wallet.publicKey) {
       fetchProfile(wallet.publicKey);
@@ -61,47 +54,42 @@ export default function Home() {
     }
   },[wallet])
 
-//Disconnect wallet when back button was pressed in the Dashboard
-useEffect(() => {
-    router.beforePopState(({ as }) => {
-        if (as !== router.asPath) {
-            disconnectWallet();
-        }
-        return true;
-    });
+  useEffect(()=> {
+    fetchPost()
+  },[user_profile_data])
 
-    return () => {
-        router.beforePopState(() => true);
-    };
-}, [router]);
+  //Disconnect wallet when back button was pressed in the Dashboard
+  useEffect(() => {
+      router.beforePopState(({ as }) => {
+          if (as !== router.asPath) {
+              disconnectWallet();
+          }
+          return true;
+      });
 
-  const disconnectWallet = async() => {
-    await wallet.disconnect();
-  }
+      return () => {
+          router.beforePopState(() => true);
+      };
+  }, [router]);
+ 
 
   const fetchProfile = async(profile_wallet:web3.PublicKey) => {
     let user_profile_pda = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()], program.programId)[0]
     try{
       const account_valid = await connection.getAccountInfo(user_profile_pda)
-      console.log(account_valid)
+  
+      if(!account_valid) router.push("/");
 
-      // if(account_valid != null){
-        const account_info = await program.account.userProfileState.fetch(user_profile_pda);
-        let account_info_w_key = {
-          ...account_info,
-          key: profile_wallet,
-          profile_pda: user_profile_pda
-        }
-        setUserProfileData(account_info_w_key);
-        console.log("UserProfileData: ",account_info_w_key )
-      // }
-      // else{
-      //   setUserProfileData({
-      //     key: profile_wallet,
-      //     profile_pda: user_profile_pda
-      //   });
-      //   console.log("Account has not been created", account_valid);
-      // }
+      const account_info = await program.account.userProfileState.fetch(user_profile_pda);
+
+      let account_info_w_key = {
+        ...account_info,
+        key: profile_wallet,
+        profile_pda: user_profile_pda
+      }
+
+      setUserProfileData(account_info_w_key);
+      console.log("fetchProfile fetched: ", account_info_w_key);
     }catch(error){
       console.log("Error while fetching profile: ", error);
     }
@@ -109,10 +97,8 @@ useEffect(() => {
   }
 
   const fetchPost = async() => {
-    if(!user_profile_data){
-      return
-    }
     try{
+      if(!user_profile_data) return
       const discriminator = BorshAccountsCoder.accountDiscriminator("postDataState");
 
       let posts = await connection.getProgramAccounts(program.programId, {
@@ -138,16 +124,15 @@ useEffect(() => {
         ]
       })
 
-      console.log("posts", posts)
+      console.log("fetchPost fetched: ", posts)
 
       if(posts.length > 0) {
         let post_deserialize = posts.map((post) => {
           return {
-            date: new Date(post.account.data.reduce((acc, byte, index) => acc + byte * Math.pow(256, index), 0)),
+            date: new Date(post.account.data.reduce((acc, byte, index) => acc + byte * Math.pow(256, index), 0) * 1000),
             pda: post.pubkey
           }
         })
-        // post_deserialize.sort()
         post_deserialize.sort((a,b) => b.date.getTime() - a.date.getTime())
         setUserPostData(post_deserialize)
       }
@@ -156,6 +141,12 @@ useEffect(() => {
   catch(error){
     console.log(error)
   }
+  }
+
+
+
+  const disconnectWallet = async() => {
+    await wallet.disconnect();
   }
 
   return (
@@ -181,16 +172,11 @@ useEffect(() => {
           </LeftBody>
 
           <CenterBody>
-            <button onClick={fetchPost}>Fetch Data</button>
-            {user_posts_data && user_posts_data.map((post, id) => (
-              <PostCard
-                key={id}
-                post={post}
-              />
-            ))}
-
-
+            <ScrollablePostcards
+            posts_data={user_posts_data}
+            />
           </CenterBody>
+
           <RightBody>
             <div className='flex justify-start'>
               <SolanaWallet/> 

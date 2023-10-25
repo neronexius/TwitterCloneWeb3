@@ -33,7 +33,7 @@ const ProfileModal:FC<ProfileModal> = (props) => {
     }
 
     return (
-        <div className="absolute w-screen h-screen ">
+        <div className="fixed w-screen h-screen ">
             <div 
             className = "absolute xl:left-[20px] left-3 bottom-20 z-10 mt-2 w-[250px] rounded-md bg-black border-slate-800 border shadow-slate-700 shadow-lg "
             ref={ref}

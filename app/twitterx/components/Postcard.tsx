@@ -1,5 +1,5 @@
 import { Post } from "@/interface";
-import {FC, useState, useEffect} from "react";
+import {FC, useState, useEffect, memo} from "react";
 import Image from "next/image";
 import ImageLoad from "./ImageLoad";
 import * as anchor from "@project-serum/anchor"
@@ -28,6 +28,7 @@ const PostCard: FC<PostCardInterface> = (props) => {
     },[]);   
 
     const fetch_post_data = async () => {
+        console.log("Calling post")
         try{
             console.log("PDA", props.post.pda.toBase58())
             let data = await program.account.postDataState.fetch(props.post.pda)
@@ -41,9 +42,6 @@ const PostCard: FC<PostCardInterface> = (props) => {
     
     }
 
-
-
-
     return(
     <div className="flex p-4 border-b flex-col min-h-[250px]">
         {post_data && post_data.imageUrl && post_data.imageUrl.length > 0 && post_data.imageUrl.map((image:string) => (
@@ -54,12 +52,13 @@ const PostCard: FC<PostCardInterface> = (props) => {
             
         )}
         <h1>{post_data && post_data.content}</h1>
+
     </div>
     )
 } 
 
 
-export default PostCard;
+export default memo(PostCard);
 
 interface PostCardInterface {
     post: {

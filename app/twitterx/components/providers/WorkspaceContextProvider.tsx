@@ -4,15 +4,16 @@ import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Connection, Keypair } from "@solana/web3.js";
 import { TwitterxClone, IDL } from "@/idls/twitterx_clone";
 import idl from "../../idls/twitterx_clone.json";
+// import {Workspace} from "../../z";
 
 
-const WorkspaceContext = createContext({});
+const WorkspaceContext = createContext<Workspace>({} as Workspace);
 const Program_ID = idl.metadata.address;
 
 export interface Workspace {
-    connection?: Connection,
-    provider?: AnchorProvider,
-    program?: Program<TwitterxClone>
+    connection: Connection,
+    provider: AnchorProvider,
+    program: Program<TwitterxClone>
 }
 
 const MockWallet = {
@@ -45,5 +46,6 @@ const WorkspaceContextProvider:FC<{children: ReactNode}> = ({children}:any) => {
 const useWorkspace = ():Workspace => {
     return useContext(WorkspaceContext)
 }
+
 
 export {useWorkspace, WorkspaceContextProvider, MockWallet}

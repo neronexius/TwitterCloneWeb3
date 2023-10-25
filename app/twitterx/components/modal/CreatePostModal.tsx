@@ -15,15 +15,14 @@ import { UserProfile } from "@/interface";
 const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
 
     const workspace:Workspace = useWorkspace();
-    if (!workspace || !workspace.program || !workspace.connection || !workspace.provider) {
-        return (
-            <>
-            </>
-        )
-    }
+    // if (!workspace || !workspace.program || !workspace.connection || !workspace.provider) {
+    //     return (
+    //         <>
+    //         </>
+    //     )
+    // }
     const program = workspace.program; 
     const provider = workspace.provider;
-    const connection = workspace.connection;
     const wallet = useWallet();
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -91,7 +90,9 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
 
       const handleSubmitPost = async () => {
         try{
-            console.log("HAHA: ", props.user_profile_data)
+            if(!program || !provider) {
+                return
+            }
             setIsLoading(true)
             //Need separate the uploadedMedia into gif and images array
  
