@@ -47,7 +47,7 @@ const ScrollablePostcards:FC<ScrollablePostcards> = ({posts_data}) => {
     )
 }
 
-export default memo(ScrollablePostcards)
+export default ScrollablePostcards
 
 
 interface ScrollablePostcards {
