@@ -9,8 +9,8 @@ const initialState: UserProfile = {
     username: null,
     profileImage: null,
     numberOfPost: 0,
-    key: new PublicKey("2fWFysx8y9W3uKHZYhr26nPLwY1sXFwituC6zaLUgj6R"),
-    profile_pda: new PublicKey("2fWFysx8y9W3uKHZYhr26nPLwY1sXFwituC6zaLUgj6R")
+    key: "2fWFysx8y9W3uKHZYhr26nPLwY1sXFwituC6zaLUgj6R",
+    profile_pda: "2fWFysx8y9W3uKHZYhr26nPLwY1sXFwituC6zaLUgj6R"
 }
 
 export const UserProfileSlice = createSlice({
@@ -28,8 +28,8 @@ export const UserProfileSlice = createSlice({
             state.username = null,
             state.numberOfPost = 0,
             state.profileImage = null,
-            state.key = new PublicKey("2fWFysx8y9W3uKHZYhr26nPLwY1sXFwituC6zaLUgj6R"),
-            state.profile_pda = new PublicKey("2fWFysx8y9W3uKHZYhr26nPLwY1sXFwituC6zaLUgj6R")
+            state.key = "2fWFysx8y9W3uKHZYhr26nPLwY1sXFwituC6zaLUgj6R",
+            state.profile_pda = "2fWFysx8y9W3uKHZYhr26nPLwY1sXFwituC6zaLUgj6R"
         }
     }
 })

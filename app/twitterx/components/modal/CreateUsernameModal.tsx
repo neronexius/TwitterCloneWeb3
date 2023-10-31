@@ -6,6 +6,7 @@ import { ChangeEvent, FormEvent, useState, FC } from "react";
 import { onlyLettersAndNumbers } from "@/utils";
 import * as web3 from "@solana/web3.js";
 import LayoutModal from "./LayoutModal";
+import { UserProfile } from "@/interface";
 
 
 const CreateUsernameModal:FC<CreateUsernameModalInterface> = (props) => {
@@ -131,7 +132,7 @@ const CreateUsernameModal:FC<CreateUsernameModalInterface> = (props) => {
 export default CreateUsernameModal;
 
 interface CreateUsernameModalInterface {
-    user_profile_data: any
+    user_profile_data: UserProfile
     setShowCreateUsernameModal: (state: boolean) => void
     fetchProfile: (wallet: web3.PublicKey) => void 
 }

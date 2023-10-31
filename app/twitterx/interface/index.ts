@@ -5,8 +5,8 @@ export type UserProfile = {
     username: string | null,
     numberOfPost: number,
     profileImage: string | null,
-    key: web3.PublicKey,
-    profile_pda: web3.PublicKey
+    key: string,
+    profile_pda: string
 }
 
 

@@ -37,7 +37,7 @@ const ScrollablePostcards:FC<ScrollablePostcards> = ({posts_data}) => {
                 console.log("index post,", index)
                 return (
                 <PostCard
-                    key={index}
+                    key={post.pda.toString()}
                     post={post}
                 />
             )})
@@ -47,7 +47,7 @@ const ScrollablePostcards:FC<ScrollablePostcards> = ({posts_data}) => {
     )
 }
 
-export default ScrollablePostcards
+export default memo(ScrollablePostcards)
 
 
 interface ScrollablePostcards {

@@ -39,7 +39,7 @@ export default function Home() {
 
   const router = useRouter();
 
-  const user_profile_data:any = useAppSelector(state => state.user_profile);
+  const user_profile_data:UserProfile = useAppSelector(state => state.user_profile);
 
   const [user_posts_data, setUserPostData] = useState<Array<{
     pda: anchor.web3.PublicKey,
@@ -92,8 +92,8 @@ export default function Home() {
 
       let account_info_w_key = {
         ...account_info,
-        key: profile_wallet,
-        profile_pda: user_profile_pda
+        key: profile_wallet.toBase58(),
+        profile_pda: user_profile_pda.toBase58()
       }
 
       dispatch(update_profile(account_info_w_key));
@@ -125,7 +125,7 @@ export default function Home() {
           {
             memcmp:{
               offset: 12,
-              bytes: anchor.utils.bytes.bs58.encode(user_profile_data.profile_pda.toBuffer())
+              bytes: anchor.utils.bytes.bs58.encode(new web3.PublicKey(user_profile_data.profile_pda).toBuffer())
             }
           }
           
@@ -150,8 +150,6 @@ export default function Home() {
     console.log(error)
   }
   }
-
-
 
   const disconnectWallet = async() => {
     await wallet.disconnect();
@@ -217,7 +215,7 @@ export default function Home() {
       user_profile_data={user_profile_data}
       fetchProfile={()=> {
         user_profile_data && user_profile_data.key
-        && fetchProfile(user_profile_data.key)
+        && fetchProfile(new web3.PublicKey(user_profile_data.key))
       }}
       />}
 
