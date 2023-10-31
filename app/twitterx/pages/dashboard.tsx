@@ -21,11 +21,15 @@ import * as anchor from "@project-serum/anchor"
 import PostCard from '@/components/Postcard'
 import { BorshAccountsCoder } from '@coral-xyz/anchor'
 import ScrollablePostcards from '@/components/ScrollablePostcards'
+import { useAppDispatch, useAppSelector } from '@/redux/store'
+import { clear_profile, update_profile } from '@/redux/profile'
 
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+  const dispatch = useAppDispatch();
+
 
   const workspace:Workspace = useWorkspace();
   const program = workspace.program; 
@@ -35,7 +39,8 @@ export default function Home() {
 
   const router = useRouter();
 
-  const [user_profile_data, setUserProfileData] = useState<UserProfile>();
+  const user_profile_data:UserProfile = useAppSelector(state => state.user_profile);
+
   const [user_posts_data, setUserPostData] = useState<Array<{
     pda: anchor.web3.PublicKey,
     date: Date
@@ -47,6 +52,7 @@ export default function Home() {
 
   useEffect(()=>{
     if (wallet && wallet.publicKey) {
+      dispatch(clear_profile())
       fetchProfile(wallet.publicKey);
     }
     else{
@@ -74,6 +80,8 @@ export default function Home() {
  
 
   const fetchProfile = async(profile_wallet:web3.PublicKey) => {
+    
+    
     let user_profile_pda = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()], program.programId)[0]
     try{
       const account_valid = await connection.getAccountInfo(user_profile_pda)
@@ -84,11 +92,11 @@ export default function Home() {
 
       let account_info_w_key = {
         ...account_info,
-        key: profile_wallet,
-        profile_pda: user_profile_pda
+        key: profile_wallet.toBase58(),
+        profile_pda: user_profile_pda.toBase58()
       }
 
-      setUserProfileData(account_info_w_key);
+      dispatch(update_profile(account_info_w_key));
       console.log("fetchProfile fetched: ", account_info_w_key);
     }catch(error){
       console.log("Error while fetching profile: ", error);
@@ -117,7 +125,7 @@ export default function Home() {
           {
             memcmp:{
               offset: 12,
-              bytes: anchor.utils.bytes.bs58.encode(user_profile_data.profile_pda.toBuffer())
+              bytes: anchor.utils.bytes.bs58.encode(new web3.PublicKey(user_profile_data.profile_pda).toBuffer())
             }
           }
           
@@ -142,8 +150,6 @@ export default function Home() {
     console.log(error)
   }
   }
-
-
 
   const disconnectWallet = async() => {
     await wallet.disconnect();
@@ -209,7 +215,7 @@ export default function Home() {
       user_profile_data={user_profile_data}
       fetchProfile={()=> {
         user_profile_data && user_profile_data.key
-        && fetchProfile(user_profile_data.key)
+        && fetchProfile(new web3.PublicKey(user_profile_data.key))
       }}
       />}
 

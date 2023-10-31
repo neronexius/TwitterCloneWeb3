@@ -120,7 +120,7 @@ const CreatePostModal:FC<CreatePostModalInterface> = (props) => {
             if (!props.user_profile_data || props.user_profile_data.numberOfPost == undefined){
                 return
             } 
-            let [post_pda] = web3.PublicKey.findProgramAddressSync([Buffer.from("post"), props.user_profile_data.profile_pda.toBuffer(), Buffer.from((props.user_profile_data.numberOfPost + 1).toString())], program.programId)
+            let [post_pda] = web3.PublicKey.findProgramAddressSync([Buffer.from("post"), new web3.PublicKey(props.user_profile_data.profile_pda).toBuffer(), Buffer.from((props.user_profile_data.numberOfPost + 1).toString())], program.programId)
             console.log("Content: ", content)
             const transaction = await program.methods
             .createPost(content, uploadedMedia)

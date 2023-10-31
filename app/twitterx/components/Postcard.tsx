@@ -25,7 +25,7 @@ const PostCard: FC<PostCardInterface> = (props) => {
 
     useEffect(() => {
         fetch_post_data()
-    },[]);   
+    },[props.post]);   
 
     const fetch_post_data = async () => {
         console.log("Calling post")
