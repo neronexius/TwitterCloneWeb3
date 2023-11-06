@@ -17,9 +17,6 @@ const PostCard: FC<PostCardInterface> = (props) => {
         )
     }
     const program = workspace.program; 
-    const provider = workspace.provider;
-    const connection = workspace.connection;
-
 
     const [post_data, setPostData] = useState<Post>();
 
@@ -43,16 +40,45 @@ const PostCard: FC<PostCardInterface> = (props) => {
     }
 
     return(
-    <div className="flex p-4 border-b flex-col min-h-[250px]">
-        {post_data && post_data.imageUrl && post_data.imageUrl.length > 0 && post_data.imageUrl.map((image:string) => (
-            <ImageLoad
-                source={image}
-            />
-        )
-            
-        )}
-        <h1>{post_data && post_data.content}</h1>
-
+    <div className="flex p-4  border-b w-full gap-2">
+    <div>
+        Profile
+    </div>
+    <div className="flex flex-col w-full">
+        <div className="flex flex-col">
+            {post_data && post_data.imageUrl && post_data.imageUrl.length > 0 && post_data.imageUrl.map((image:string) => (
+                <ImageLoad
+                    source={image}
+                />
+            )
+                
+            )}
+            <h1>{post_data && post_data.content}</h1>
+        </div>
+        <div className="flex w-full justify-between">
+            <button className="flex gap-1 items-center">
+                <Image
+                    src="/comment.svg"
+                    alt="comment button"
+                    height={20}
+                    width={20}
+                />
+                <h1>{post_data?.numberOfComment}</h1>
+            </button>
+            <button className="flex">
+                <Image
+                    src="/love.svg"
+                    height={20}
+                    width={20}
+                    alt=""
+                />
+                <h1>Like</h1>
+            </button>
+            <button>Activity</button>
+            <button>Bookmark</button>
+            <button>Share</button>
+        </div>
+    </div>
     </div>
     )
 } 
