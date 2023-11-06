@@ -2,107 +2,160 @@ import Image from 'next/image'
 import Head from 'next/head'
 import { Inter } from 'next/font/google'
 import SolanaWallet from '../components/SolanaWallet'
-import { useState, useEffect, useCallback } from "react";
-import { Workspace, useWorkspace } from '@/components/providers/WorkspaceContextProvider'
-import { useWallet } from "@solana/wallet-adapter-react";
+import Navbar from '../components/Navbar'
+import LeftBody from '../components/body/LeftBody'
+import ProfileCard from '../components/ProfileCard'
+import CenterBody from '../components/body/CenterBody'
+import RightBody from '../components/body/RightBody'
+import InitialiseProfileModal from '../components/modal/ProfileModal'
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import * as web3 from "@solana/web3.js"
-import * as util from "../utils"
+import { useWallet } from '@solana/wallet-adapter-react'
+import ProfileModal from '../components/modal/ProfileModal'
+import CreateUsernameModal from '@/components/modal/CreateUsernameModal'
+import * as web3 from "@solana/web3.js";
+import { Workspace, useWorkspace } from '@/components/providers/WorkspaceContextProvider'
+import CreatePostModal from '@/components/modal/CreatePostModal'
+import { Post, UserProfile } from '@/interface'
+import * as anchor from "@project-serum/anchor"
+import PostCard from '@/components/Postcard'
+import { BorshAccountsCoder } from '@coral-xyz/anchor'
+import ScrollablePostcards from '@/components/ScrollablePostcards'
+import { useAppDispatch, useAppSelector } from '@/redux/store'
+import { clear_profile, update_profile } from '@/redux/profile'
+
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
-  const workspace:Workspace = useWorkspace();
-  const router = useRouter();
+  const dispatch = useAppDispatch();
 
+
+  const workspace:Workspace = useWorkspace();
   const program = workspace.program; 
   const provider = workspace.provider;
   const connection = workspace.connection;
-  const wallet = useWallet().publicKey;
+  const wallet = useWallet();
 
-  const [loading, setLoading] = useState<boolean>(false);
-
-  useEffect(() => {
-    router.beforePopState(({ as }) => {
-        if (as !== router.asPath) {
-           history.back()
-        }
-        return true;
-    });
-
-    return () => {
-        router.beforePopState(() => true);
-    };
-}, [router]);
-
-  useEffect(()=>{
-    if (wallet) {
-      fetchProfile(wallet);
-    }
-  },[wallet])
-
-
-  const fetchProfile = useCallback(async(profile_wallet:web3.PublicKey) => {
-      setLoading(true);
-      const [userProfilePda] = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()],program.programId)
-      try{
-        const account_valid = await connection.getAccountInfo(userProfilePda)
-        if(account_valid != null){
-          router.push("/dashboard")
-        }
-      }catch(error){
-        console.log("Error while fetching profile: ", error)
-      }
-      finally{
-        setTimeout(()=> {
-          setLoading(false)
-        },1000)
-      }
-  },[wallet])
+  const router = useRouter();
   
 
-  const initialiseProfile = async(profile_wallet: web3.PublicKey) => {
-    setLoading(true);
-    const [userProfilePda] = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()],program.programId)
+  const user_profile_data:UserProfile = useAppSelector(state => state.user_profile);
 
-    try {
-      const transaction = await program.methods.initialiseUserProfile().accounts({
-        userProfile: userProfilePda
-      }).transaction();
+  const [user_posts_data, setUserPostData] = useState<Array<{
+    pda: anchor.web3.PublicKey,
+    date: Date
+  }>>(); 
+  const [showLoading, setShowLoading] = useState(true)
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+  const [showCreateUsernameModal, setShowCreateUsernameModal] = useState<boolean>(false);
+  const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false);
 
-      const tx = await provider.sendAndConfirm(transaction);
-      console.log(tx);
-      router.push("/dashboard")
+  useEffect(()=>{
+    if (wallet && wallet.publicKey) {
+      dispatch(clear_profile())
+      fetchProfile(wallet.publicKey);
+      setShowLoading(false)
     }
-    catch(error:any){
-      if (typeof error == "object"){
-        if(error.message.includes("Attempt to debit an account but found no record of a prior credit")){
-          alert("You need a small amount of sol to register")
-        }
-      } 
-      console.log(typeof error);
-      console.log(error)
+    else{
+      router.push("/login")
     }
-    finally{
-      setTimeout(()=> {
-        setLoading(false)
-      },1000)
+  },[wallet])
+
+  useEffect(()=> {
+    fetchPost()
+  },[user_profile_data])
+
+  //Disconnect wallet when back button was pressed in the Dashboard
+  useEffect(() => {
+      router.beforePopState(({ as }) => {
+          if (as !== router.asPath) {
+              disconnectWallet();
+          }
+          return true;
+      });
+
+      return () => {
+          router.beforePopState(() => true);
+      };
+  }, [router]);
+ 
+
+  const fetchProfile = async(profile_wallet:web3.PublicKey) => {
+    
+    
+    let user_profile_pda = web3.PublicKey.findProgramAddressSync([Buffer.from("user_profile"), profile_wallet.toBuffer()], program.programId)[0]
+    try{
+      const account_valid = await connection.getAccountInfo(user_profile_pda)
+  
+      if(!account_valid) router.push("/");
+
+      const account_info = await program.account.userProfileState.fetch(user_profile_pda);
+
+      let account_info_w_key = {
+        ...account_info,
+        key: profile_wallet.toBase58(),
+        profile_pda: user_profile_pda.toBase58()
+      }
+
+      dispatch(update_profile(account_info_w_key));
+      console.log("fetchProfile fetched: ", account_info_w_key);
+    }catch(error){
+      console.log("Error while fetching profile: ", error);
     }
-}
 
-  const renderRegisterButton = (profile_wallet: web3.PublicKey) => {
-    return(
-
-        <button 
-          onClick={() => initialiseProfile(profile_wallet)}
-          className="w-[180px] bg-white rounded-md text-slate-900 hover:text-slate-200 hover:bg-slate-800 ml-3"
-          >
-            <h1 className="  font-bold">Register </h1>
-        </button>
-
-    )
   }
 
+  const fetchPost = async() => {
+    try{
+      if(!user_profile_data) return
+      const discriminator = BorshAccountsCoder.accountDiscriminator("postDataState");
+
+      let posts = await connection.getProgramAccounts(program.programId, {
+        dataSlice:{
+          offset: 44,
+          length: 8
+        },
+        filters:[
+          {
+            memcmp:{
+              offset: 0,
+              bytes: anchor.utils.bytes.bs58.encode(discriminator)
+              //figure out how to get the discriminator from anchor account. 
+            },
+          },
+          {
+            memcmp:{
+              offset: 12,
+              bytes: anchor.utils.bytes.bs58.encode(new web3.PublicKey(user_profile_data.profile_pda).toBuffer())
+            }
+          }
+          
+        ]
+      })
+
+      console.log("fetchPost fetched: ", posts)
+
+      if(posts.length > 0) {
+        let post_deserialize = posts.map((post) => {
+          return {
+            date: new Date(post.account.data.reduce((acc, byte, index) => acc + byte * Math.pow(256, index), 0) * 1000),
+            pda: post.pubkey
+          }
+        })
+        post_deserialize.sort((a,b) => b.date.getTime() - a.date.getTime())
+        setUserPostData(post_deserialize)
+      }
+
+  }
+  catch(error){
+    console.log(error)
+  }
+  }
+
+  const disconnectWallet = async() => {
+    await wallet.disconnect();
+  }
 
   const renderLoading = () => {
     return (
@@ -117,6 +170,7 @@ export default function Home() {
       </div>
     )
   }
+
   return (
     <>
       <Head>
@@ -125,20 +179,72 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className=" h-screen pt-2 flex w-screen overflow-x-hidden">
+      {
+        
+      showLoading 
+      ? 
+      renderLoading()
+      : 
+      <main className='overflow-hidden' >
+      <div className=" pt-2 flex md:justify-center w-screen ">
+        <div className="sm:flex xl:w-[1280px] lg:w-[1080px] md:w-[840px] w-screen relative ">
 
-        <div className="h-full flex  flex-col justify-center items-center w-full">
-          <h1 className="p-9 text-3xl" >Welcome to TwitterXClone</h1>
-          {loading ? renderLoading() :
-          wallet ?
-          <div className="flex"><SolanaWallet/>{renderRegisterButton(wallet)}</div> :
-          <div className="flex"><SolanaWallet/></div> 
-          }
-          {!loading && wallet && <h1 className="mt-2">It appears that you do not have any account</h1>}
+          <LeftBody>
+            <Navbar
+              post={setShowCreatePostModal}
+            />
+            <ProfileCard
+            setShowProfileModal={setShowProfileModal}
+            user_profile_data={user_profile_data}
+            />
+          </LeftBody>
+
+          <CenterBody>
+            <ScrollablePostcards
+            posts_data={user_posts_data}
+            />
+          </CenterBody>
+
+          <RightBody>
+            <div className='flex justify-start'>
+              <SolanaWallet/> 
+            </div>
+            <div>
+              <h2>Subsribe to Premium</h2>
+              <p className="font-bold wrap">Subscribe to unlock new features and if eligible, receive a share of the revenue</p>
+            </div>
+          </RightBody>
+
+          {showProfileModal && <ProfileModal
+          wallet={wallet}
+          setShowProfileModal={setShowProfileModal}
+          setShowCreateUsernameModal={setShowCreateUsernameModal}
+          user_profile_data={user_profile_data}
+          />}
+
         </div>
+      </div>
+
+      {showCreateUsernameModal && 
+      <CreateUsernameModal
+        user_profile_data={user_profile_data}
+        setShowCreateUsernameModal={setShowCreateUsernameModal}
+        fetchProfile={fetchProfile}
+      />}
+
+      {showCreatePostModal && <CreatePostModal
+      setShowCreatePostModal={setShowCreatePostModal}
+      user_profile_data={user_profile_data}
+      fetchProfile={()=> {
+        user_profile_data && user_profile_data.key
+        && fetchProfile(new web3.PublicKey(user_profile_data.key))
+      }}
+      />}
+
+      {}
+
       </main>
-      
-      
+      }
     </>
   )
 }
