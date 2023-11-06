@@ -28,7 +28,6 @@ const ImageLoad:FC<ImageLoadInterface> = (props) => {
                     onLoad={() => {setShowLoading(false)}}
                 />
                 {showLoading && renderLoading()}
-                <button onClick={() => {setShowLoading(false)}}>l</button>
         </div>
 
         </>
